@@ -135,9 +135,18 @@ send_datagram(S, H, P, Data) ->
 %% @private
 %%------------------------------------------------------------------------------
 split(R = #syslog_report{msg = Msg}) ->
-  [R#syslog_report{msg = Line} || Line <- split_impl(Msg), Line =/= <<>>].
+  [R#syslog_report{msg = truncate(Line)} || Line <- split_impl(Msg), Line =/= <<>>].
 
 %%------------------------------------------------------------------------------
 %% @private
 %%------------------------------------------------------------------------------
 split_impl(Bin) when is_binary(Bin) -> binary:split(Bin, <<"\n">>, [global]).
+
+%%------------------------------------------------------------------------------
+%% @private
+%%------------------------------------------------------------------------------
+truncate(Bin) when is_binary(Bin), byte_size(Bin) > 65507 ->
+  TruncatedBin = binary:part(Bin,{0,65493}),
+  <<TruncatedBin/binary, <<"...[truncated]">>/binary>>;
+truncate(Bin) when is_binary(Bin) -> Bin.
+
