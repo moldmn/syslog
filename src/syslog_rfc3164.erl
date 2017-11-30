@@ -65,9 +65,10 @@ to_iolist(Report = #syslog_report{facility = F, severity = S}) ->
 %% @private
 %%------------------------------------------------------------------------------
 get_date(#syslog_report{timestamp = {MegaSecs, Secs, MicroSecs}}) ->
-    get_date(calendar:now_to_local_time({MegaSecs, Secs, MicroSecs}));
-get_date({{_, Mo, D}, {H, Mi, S}}) ->
-    [month(Mo), " ", day(D), " ", digit(H), ":", digit(Mi), ":", digit(S)].
+  get_date(calendar:now_to_universal_time({MegaSecs, Secs, 0}), MicroSecs).
+get_date({{Y, Mo, D}, {H, Mi, S}}, Micro) ->
+  [integer_to_list(Y), "-", digit(Mo), "-", digit(D), "T",
+    digit(H), ":", digit(Mi), ":", digit(S), ".", micro(Micro), "Z"].
 
 %%------------------------------------------------------------------------------
 %% @private
@@ -78,6 +79,16 @@ get_hostname(Hostname, Occurence) when Occurence > 2 ->
     string:sub_string(Hostname, 1, Occurence - 1);
 get_hostname(Hostname, _) ->
     Hostname.
+
+%%------------------------------------------------------------------------------
+%% @private
+%%------------------------------------------------------------------------------
+micro(M) when M < 10     -> ["00000", integer_to_list(M)];
+micro(M) when M < 100    -> ["0000", integer_to_list(M)];
+micro(M) when M < 1000   -> ["000", integer_to_list(M)];
+micro(M) when M < 10000  -> ["00", integer_to_list(M)];
+micro(M) when M < 100000 -> ["0", integer_to_list(M)];
+micro(M)                 -> integer_to_list(M).
 
 %%------------------------------------------------------------------------------
 %% @private
